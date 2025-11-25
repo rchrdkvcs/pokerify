@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Pokerify",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
