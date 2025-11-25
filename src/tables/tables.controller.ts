@@ -1,16 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Param } from '@nestjs/common';
 import { TablesService } from './tables.service';
-import { CreateTableDto } from './dto/create-table.dto';
-import { UpdateTableDto } from './dto/update-table.dto';
 
 @Controller('tables')
 export class TablesController {
   constructor(private readonly tablesService: TablesService) {}
-
-  @Post()
-  create(@Body() createTableDto: CreateTableDto) {
-    return this.tablesService.create(createTableDto);
-  }
 
   @Get()
   findAll() {
@@ -22,13 +15,18 @@ export class TablesController {
     return this.tablesService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTableDto: UpdateTableDto) {
-    return this.tablesService.update(+id, updateTableDto);
+  @Post(':id/:action')
+  makeAction(@Param('id') id: string, @Param('action') action: string) {
+    return this.tablesService.makeAction(+id, action);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.tablesService.remove(+id);
+  @Get(':id')
+  joinTable(@Param('id') id: string) {
+    return this.tablesService.joinTable(+id);
+  }
+
+  @Get(':id')
+  leaveTable(@Param('id') id: string) {
+    return this.tablesService.leaveTable(+id);
   }
 }

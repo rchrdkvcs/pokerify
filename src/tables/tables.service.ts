@@ -1,13 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { CreateTableDto } from './dto/create-table.dto';
-import { UpdateTableDto } from './dto/update-table.dto';
 
 @Injectable()
 export class TablesService {
-  create(createTableDto: CreateTableDto) {
-    return 'This action adds a new table';
-  }
-
   findAll() {
     return `This action returns all tables`;
   }
@@ -16,11 +10,15 @@ export class TablesService {
     return `This action returns a #${id} table`;
   }
 
-  update(id: number, updateTableDto: UpdateTableDto) {
-    return `This action updates a #${id} table`;
+  makeAction(id: number, action: string) {
+    return `This action performs ${action} on table #${id}`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} table`;
+  joinTable(id: number) {
+    return `This action performs on table #${id}`;
+  }
+
+  leaveTable(id: number) {
+    return `This action performs on table #${id}`;
   }
 }
