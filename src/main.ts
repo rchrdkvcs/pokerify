@@ -1,11 +1,12 @@
 import { NestFactory } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { apiReference } from '@scalar/nestjs-api-reference';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // TODO: Create swagger config service
   const config = new DocumentBuilder()
     .setTitle('Pokerify API')
     .setDescription("Documentation pour l'API Pokerify (poker Texas Holdem)")
@@ -35,4 +36,5 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
+
 bootstrap();
