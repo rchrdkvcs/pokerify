@@ -33,6 +33,12 @@ export class UsersService {
     return this.userModel.findOne({ username }).exec();
   }
 
+  async findByUsernameWithPassword(
+    username: string,
+  ): Promise<UserDocument | null> {
+    return this.userModel.findOne({ username }).select('+password').exec();
+  }
+
   async update(
     id: string,
     updateUserDto: UpdateUserDto,
