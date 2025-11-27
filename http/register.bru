@@ -1,0 +1,22 @@
+meta {
+  name: register
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{BASE_URL}}/auth/register
+  body: formUrlEncoded
+  auth: inherit
+}
+
+body:form-urlencoded {
+  username: rchrdkvcs
+  password: Random1234
+  password_confirmation: Random1234
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
