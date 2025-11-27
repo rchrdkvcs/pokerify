@@ -7,6 +7,7 @@ import { PlayersModule } from './players/players.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { SwaggerService } from './swagger/swagger.service';
 
 @Module({
   imports: [
@@ -20,6 +21,6 @@ import { UsersModule } from './users/users.module';
     UsersModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, SwaggerService],
 })
 export class AppModule {}
