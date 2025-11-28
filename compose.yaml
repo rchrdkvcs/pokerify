@@ -3,6 +3,7 @@ services:
     image: mongo:latest
     container_name: pokerify_db
     hostname: mongodb
+    restart: always
     volumes:
       - ./mongodb/initdb.d/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
       - ./mongodb/data:/data/db/
@@ -12,20 +13,20 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-    ports:
-      - "27017:27017"
     networks:
-      - mongodb_network
+      - app_network
 
-volumes:
-  mongodb-data:
-    driver: local
-    name: mongo-data
-  mongodb-log:
-    driver: local
-    name: mongo-log
+  app:
+    build:
+      context: .
+    depends_on:
+      - mongodb
+    networks:
+      - app_network
+    env_file:
+      - .env
 
 networks:
-  mongodb_network:
+  app_network:
     name: pokerify_network
     driver: bridge

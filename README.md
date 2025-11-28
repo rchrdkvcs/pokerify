@@ -1,98 +1,392 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Pokerify - API Texas Hold'em Poker
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST pour simuler des parties de poker Texas Hold'em développée avec NestJS.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Table des matières
+
+- [Description](#description)
+- [Architecture](#architecture)
+- [Prérequis](#prérequis)
+- [Installation](#installation)
+- [Lancement de l'application](#lancement-de-lapplication)
+- [Routes API](#routes-api)
+- [Fonctionnement du jeu](#fonctionnement-du-jeu)
+- [Documentation Swagger](#documentation-swagger)
+- [Technologies utilisées](#technologies-utilisées)
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Pokerify est une API permettant de jouer au poker Texas Hold'em. L'application gère :
+- Création de comptes utilisateurs avec une cave initiale de 1000€
+- Authentification JWT
+- Création et gestion de tables de poker
+- Ajout automatique d'une IA si un joueur rejoint seul une table
+- Distribution des cartes et gestion des tours de mises
+- Évaluation des mains et détermination du gagnant
+- Toutes les phases du jeu (PRE_FLOP, FLOP, TURN, RIVER, SHOWDOWN)
 
-## Project setup
+## Architecture
 
-```bash
-$ npm install
+### Structure du projet
+
+```
+src/
+├── auth/                 # Authentification JWT
+│   ├── auth.controller.ts
+│   ├── auth.service.ts
+│   ├── auth.guard.ts
+│   ├── auth.decorator.ts
+│   └── dto/
+├── users/               # Gestion des utilisateurs
+│   ├── users.controller.ts
+│   ├── users.service.ts
+│   └── user.schema.ts
+├── tables/              # Gestion des tables de poker
+│   ├── tables.controller.ts
+│   ├── tables.service.ts
+│   ├── table.schema.ts
+│   └── dto/
+├── players/             # Gestion des joueurs dans une partie
+│   ├── players.service.ts
+│   └── player.schema.ts
+├── poker/               # Logique du jeu de poker
+│   ├── poker-game.service.ts
+│   ├── hand-evaluator.service.ts
+│   ├── poker.utils.ts
+│   └── poker.types.ts
+├── ai/                  # Intelligence artificielle
+│   └── poker-ai.service.ts
+└── swagger/            # Configuration Swagger
+    └── swagger.service.ts
 ```
 
-## Compile and run the project
+### Diagramme de classes
 
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```
+┌─────────────────┐
+│   User          │
+│─────────────────│
+│ username        │
+│ password        │
+│ stack: 1000€    │
+└─────────────────┘
+        │
+        │ 1:N
+        ▼
+┌─────────────────┐        ┌──────────────────┐
+│   Table         │   1:N  │     Player       │
+│─────────────────│◄───────│──────────────────│
+│ smallBlind      │        │ userId           │
+│ bigBlind        │        │ username         │
+│ pot             │        │ stack            │
+│ communityCards  │        │ cards            │
+│ deck            │        │ currentBet       │
+│ state           │        │ status           │
+│ currentBet      │        │ position         │
+└─────────────────┘        │ type (human/ai)  │
+        │                  └──────────────────┘
+        │
+        ▼
+┌─────────────────────────┐
+│   PokerGameService      │
+│─────────────────────────│
+│ initializeGame()        │
+│ processAction()         │
+│ determineWinner()       │
+│ advanceToNextPhase()    │
+└─────────────────────────┘
+        │
+        ▼
+┌─────────────────────────┐
+│  HandEvaluatorService   │
+│─────────────────────────│
+│ evaluateHand()          │
+│ findWinner()            │
+│ compareHands()          │
+└─────────────────────────┘
 ```
 
-## Run tests
+## Prérequis
+
+- Node.js (v18 ou supérieur)
+- npm ou bun
+- MongoDB (via Docker ou installation locale)
+- Docker et Docker Compose (optionnel, pour lancement simplifié)
+
+## Installation
+
+### 1. Cloner le repository
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+git clone <repository-url>
+cd pokerify
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 2. Installer les dépendances
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install
+# ou
+bun install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 3. Configuration de l'environnement
 
-## Resources
+Copier le fichier `.env.example` vers `.env` et ajuster les variables si nécessaire :
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+cp .env.example .env
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Variables d'environnement :
+```env
+PORT=3000
+JWT_SECRET=your-secret-jwt-key-change-this-in-production
+MONGODB_URI=mongodb://root:password@localhost:27017/poker_db?authSource=admin
+```
 
-## Support
+**Important** : Changez le `JWT_SECRET` en production !
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Lancement de l'application
 
-## Stay in touch
+### Avec Docker (recommandé)
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+# Construire et démarrer les conteneurs
+npm run dev
 
-## License
+# Voir les logs de l'application
+npm run logs:app
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# Voir les logs de MongoDB
+npm run logs:db
+
+# Arrêter les conteneurs
+npm run down
+```
+
+L'API sera accessible sur `http://localhost:3000`
+
+### Sans Docker
+
+1. Démarrer MongoDB localement
+2. Lancer l'application :
+
+```bash
+# Mode développement
+npm run start:dev
+
+# Mode production
+npm run build
+npm run start:prod
+```
+
+## Routes API
+
+### Authentication
+
+| Méthode | Route | Description | Auth requise |
+|---------|-------|-------------|--------------|
+| POST | `/auth/register` | Créer un nouveau compte (cave de 1000€) | Non |
+| POST | `/auth/login` | Se connecter et obtenir un JWT | Non |
+| GET | `/auth/me` | Obtenir les informations de l'utilisateur connecté | Oui |
+
+#### Exemple Register
+
+```json
+POST /auth/register
+{
+  "username": "john_doe",
+  "password": "password123",
+  "password_confirmation": "password123"
+}
+
+Response:
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+#### Exemple Login
+
+```json
+POST /auth/login
+{
+  "username": "john_doe",
+  "password": "password123"
+}
+
+Response:
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+### Tables
+
+Toutes les routes suivantes nécessitent l'authentification (Bearer Token).
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| POST | `/tables` | Créer une nouvelle table |
+| GET | `/tables` | Lister toutes les tables |
+| GET | `/tables/:id` | Obtenir les détails d'une table |
+| POST | `/tables/:id/join` | Rejoindre une table (IA ajoutée automatiquement si seul) |
+| POST | `/tables/:id/leave` | Quitter une table |
+| POST | `/tables/:id/start` | Démarrer la partie (min 2 joueurs) |
+| POST | `/tables/:id/action` | Effectuer une action (fold, check, call, raise, all_in) |
+
+#### Exemples
+
+**Créer une table**
+```json
+POST /tables
+Authorization: Bearer <token>
+{
+  "smallBlind": 5,
+  "bigBlind": 10
+}
+```
+
+**Rejoindre une table**
+```json
+POST /tables/:id/join
+Authorization: Bearer <token>
+```
+
+**Démarrer une partie**
+```json
+POST /tables/:id/start
+Authorization: Bearer <token>
+```
+
+**Effectuer une action**
+```json
+POST /tables/:id/action
+Authorization: Bearer <token>
+{
+  "action": "call"
+}
+
+// Pour raise
+{
+  "action": "raise",
+  "amount": 20
+}
+```
+
+### Actions disponibles
+
+- `fold` : Se coucher
+- `check` : Checker (seulement si aucune mise à suivre)
+- `call` : Suivre la mise
+- `raise` : Relancer (spécifier le montant)
+- `all_in` : Faire tapis
+
+## Fonctionnement du jeu
+
+### 1. Création et inscription
+
+- Un joueur crée un compte avec `/auth/register`
+- Une cave de **1000€** lui est automatiquement allouée
+- Il reçoit un JWT pour s'authentifier
+
+### 2. Rejoindre une table
+
+- Un joueur crée ou rejoint une table
+- Si un joueur rejoint seul, **une IA est automatiquement ajoutée** pour avoir au minimum 2 joueurs
+- Les tables acceptent entre 2 et 8 joueurs
+
+### 3. Démarrage de la partie
+
+- Lorsque `/tables/:id/start` est appelé :
+  - Distribution de 2 cartes à chaque joueur
+  - Placement des blindes (petite et grosse blind)
+  - Début de la phase PRE_FLOP
+
+### 4. Phases du jeu
+
+1. **PRE_FLOP** : Tour d'enchères avec les 2 cartes personnelles
+2. **FLOP** : 3 cartes communes dévoilées + tour d'enchères
+3. **TURN** : 4ème carte commune dévoilée + tour d'enchères
+4. **RIVER** : 5ème carte commune dévoilée + tour d'enchères
+5. **SHOWDOWN** : Évaluation des mains et détermination du gagnant
+
+### 5. Évaluation des mains
+
+L'API évalue automatiquement les mains selon l'ordre suivant :
+1. Royal Flush (Quinte Flush Royale)
+2. Straight Flush (Quinte Flush)
+3. Four of a Kind (Carré)
+4. Full House (Full)
+5. Flush (Couleur)
+6. Straight (Suite)
+7. Three of a Kind (Brelan)
+8. Two Pair (Double Paire)
+9. Pair (Paire)
+10. High Card (Carte haute)
+
+### 6. Intelligence Artificielle
+
+L'IA prend des décisions automatiquement :
+- Checke quand c'est possible
+- Suit (call) si elle a assez de jetons
+- Se couche (fold) sinon
+
+### 7. Gestion des tours
+
+- Chaque joueur joue à son tour
+- Le tour se termine quand tous les joueurs actifs ont :
+  - Misé le même montant
+  - Agi au moins une fois
+- L'IA joue automatiquement son tour
+- Le jeu passe à la phase suivante automatiquement
+
+## Documentation Swagger
+
+L'API est documentée avec Swagger. Une fois l'application lancée, accédez à :
+
+```
+http://localhost:3000/api
+```
+
+Vous y trouverez :
+- La liste complète des routes
+- Les schémas de données (DTOs)
+- Les codes de réponse possibles
+- Un testeur d'API interactif
+
+Pour utiliser les routes protégées dans Swagger :
+1. Authentifiez-vous via `/auth/login`
+2. Cliquez sur "Authorize" en haut de la page
+3. Entrez votre token : `Bearer <votre-token>`
+
+## Technologies utilisées
+
+- **NestJS** : Framework Node.js pour l'API
+- **MongoDB** : Base de données NoSQL
+- **Mongoose** : ODM pour MongoDB
+- **JWT** : Authentification par tokens
+- **bcrypt** : Hashage des mots de passe
+- **class-validator** : Validation des DTOs
+- **Swagger** : Documentation de l'API
+- **Docker** : Conteneurisation
+
+## Développement
+
+### Scripts disponibles
+
+```bash
+npm run build          # Compiler l'application
+npm run start          # Démarrer l'application
+npm run start:dev      # Mode développement avec hot-reload
+npm run start:debug    # Mode debug
+npm run start:prod     # Mode production
+
+# Docker
+npm run dev            # Lancer avec Docker Compose
+npm run down           # Arrêter Docker Compose
+npm run logs:app       # Logs de l'application
+npm run logs:db        # Logs de MongoDB
+npm run build:docker   # Rebuild les images Docker
+```
