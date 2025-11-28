@@ -1,1 +1,4 @@
-export class CreateTableDto {}
+export class CreateTableDto {
+  smallBlind: number;
+  bigBlind: number;
+}

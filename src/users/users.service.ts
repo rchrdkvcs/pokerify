@@ -18,19 +18,15 @@ export class UsersService {
       password: hashedPassword,
     });
 
-    return createdUser.save();
+    return await createdUser.save();
   }
 
   async findAll(): Promise<UserDocument[]> {
-    return this.userModel.find().exec();
+    return await this.userModel.find().exec();
   }
 
   async findOne(id: string): Promise<UserDocument | null> {
-    return this.userModel.findById(id).exec();
-  }
-
-  async findByUsername(username: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ username }).exec();
+    return await this.userModel.findById(id).exec();
   }
 
   async findByUsernameWithPassword(
