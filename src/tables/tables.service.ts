@@ -82,7 +82,11 @@ export class TablesService {
     ).length;
     const aiPlayersNeeded = Math.max(0, 2 - humanPlayers);
 
-    for (let i = 0; i < aiPlayersNeeded && table.players.length < table.maxPlayers; i++) {
+    for (
+      let i = 0;
+      i < aiPlayersNeeded && table.players.length < table.maxPlayers;
+      i++
+    ) {
       const aiPosition = table.players.length;
       const aiPlayer: Player = {
         userId: `ai_${Date.now()}_${i}`,
@@ -142,7 +146,10 @@ export class TablesService {
 
     this.pokerGameService.initializeGame(table);
 
-    if (table.players.length > 0 && table.players[table.currentPlayerIndex].type === PlayerType.AI) {
+    if (
+      table.players.length > 0 &&
+      table.players[table.currentPlayerIndex].type === PlayerType.AI
+    ) {
       this.processAiTurns(table);
     }
 
